@@ -1,4 +1,5 @@
 import math
+import time
 from dataclasses import dataclass
 from typing import Optional
 
@@ -40,8 +41,14 @@ humidity-to-location map:
 60 56 37
 56 93 4"""
 
+
 @dataclass
 class Range:
+    start: int
+    length: int
+
+@dataclass
+class RangeMap:
     start_one: int
     start_two: int
     length: int
@@ -53,19 +60,47 @@ class Range:
         else:
             return None
 
+    def map_range(self, r: Range) -> list[Range]:
+        results = []
+        input = Range(r.start, r.length)
+        # handle the portion of the range before the map, if any
+        if r.start < self.start_one:
+            unmapped_length = min(input.length, self.start_one - input.start)
+            results.append(Range(input.start, unmapped_length))
+            input.length -= unmapped_length
+            input.start += unmapped_length
+        else:
+            results.append(None)
+        # handle the portion of the range in the map, if any
+        if self.start_one <= input.start <= self.start_one + self.length:
+            unmapped_length = min(input.length, self.length)
+            results.append(Range(self.map(input.start), unmapped_length))
+            input.length -= unmapped_length
+            input.start += unmapped_length
+        else:
+            results.append(None)
+        # handle the portion of the range after the map, if any
+        if input.length > 0:
+            results.append(input)
+        else:
+            results.append(None)
+        return results
+
+
+
 
 @generate
-def parse_range() -> Range:
+def parse_range() -> RangeMap:
     start_two = yield many1(digit())
     yield spaces()
     start_one = yield many1(digit())
     yield spaces()
     length = yield many1(digit())
-    return Range(int("".join(start_one)), int("".join(start_two)), int("".join(length)))
+    return RangeMap(int("".join(start_one)), int("".join(start_two)), int("".join(length)))
 
 @dataclass
 class Map:
-    ranges: list[Range]
+    ranges: list[RangeMap]
 
     def map(self, i: int) -> int:
         for r in self.ranges:
@@ -73,6 +108,26 @@ class Map:
             if result is not None:
                 return result
         return i
+
+    def map_range(self, r: Range) -> list[Range]:
+        return self.map_range_recur(r, self.ranges)
+
+
+    def map_range_recur(self, r: Range, range_maps: list[RangeMap]) -> list[Range]:
+        results = []
+        if not r:
+            return []
+        if len(range_maps) == 0:
+            return [r]
+        front, middle, back = range_maps[0].map_range(r)
+        if middle is not None and middle.length > 0:
+            results.append(middle)
+        if front is not None and front.length > 0:
+            results += self.map_range_recur(front, range_maps[1:])
+        if back is not None and back.length > 0:
+            results += self.map_range_recur(back, range_maps[1:])
+        return results
+
 
 @generate
 def parse_map() -> Map:
@@ -139,3 +194,34 @@ def solve(input: str) -> int:
 print(solve(example))
 print(solve(input))
 
+def flatten_ranges(ranges: list[list[Range]]) -> list[Range]:
+    results = []
+    for r in ranges:
+        results += r
+    return results
+
+def solve2(input: str) -> int:
+    problem = parse(parse_problem, input)
+    seed_ranges: list[Range] = []
+    results = []
+    for i in range(0, len(problem.seeds), 2):
+        seed_start = problem.seeds[i]
+        seed_length = problem.seeds[i+1]
+        seed_ranges.append(Range(seed_start, seed_length))
+    for seed_range in seed_ranges:
+        ranges = problem.seed_to_soil.map_range(seed_range)
+        ranges = flatten_ranges([problem.soil_to_fertilizer.map_range(r) for r in ranges])
+        ranges = flatten_ranges([problem.fertilizer_to_water.map_range(r) for r in ranges])
+        ranges = flatten_ranges([problem.water_to_light.map_range(r) for r in ranges])
+        ranges = flatten_ranges([problem.light_to_temperature.map_range(r) for r in ranges])
+        ranges = flatten_ranges([problem.temperature_to_humidity.map_range(r) for r in ranges])
+        ranges = flatten_ranges([problem.humidity_to_location.map_range(r) for r in ranges])
+        results.append(min([r.start for r in ranges]))
+
+    return min(results)
+
+print(solve2(example))
+start = time.time_ns()
+print(solve2(input))
+end = time.time_ns()
+print("Took " +  str(end-start) + " nanosecond")
