@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from typing import TypeVar, Protocol, Generic, Callable, Optional
 from queue import PriorityQueue
+import math
 
 State = TypeVar('State')
 Action = TypeVar('Action')
@@ -13,6 +15,9 @@ class SearchSpace(Protocol[State, Action]):
         ...
 
     def cost(self, state: State, action: Action) -> float:
+        ...
+
+    def states(self) -> list[State]:
         ...
 
 def astar_search(space: SearchSpace[State, Action], start: State, goal: State, heuristic: Callable[[State, Action], float], beam_size: Optional[int] = None) -> list[Action]:
@@ -52,6 +57,41 @@ def all_distance_bfs_search(space: SearchSpace[State, Action], start: State) -> 
             new_cost = cost + space.cost(state, action)
             queue.append((new_cost, new_state))
     return result
+@dataclass
+class FloydWarshallResult:
+    distance: dict[State, dict[State, float]]
+    next: dict[State, dict[State, State]]
+
+    def path(self, start: State, end: State) -> list[State]:
+        return self.path_recur(self.next[start][end], end)
+
+    def path_recur(self, start: State, end: State) -> list[State]:
+        if self.next[start][end] is None:
+            return [end]
+        else:
+            return [start] + self.path_recur(self.next[start][end], end)
+
+def floyd_warshall_search(space: SearchSpace[State, Action]) -> FloydWarshallResult:
+    distance = {}
+    next = {}
+    for state in space.states():
+        distance[state] = {}
+        next[state] = {}
+        for state2 in space.states():
+            distance[state][state2] = math.inf
+            next[state][state2] = None
+        distance[state][state] = 0
+        for action in space.actions(state):
+            state2 = space.result(state, action)
+            distance[state][state2] = space.cost(state, action)
+            next[state][state2] = state2
+    for state in space.states():
+        for state2 in space.states():
+            for state3 in space.states():
+                if distance[state2][state3] > distance[state2][state] + distance[state][state3]:
+                    distance[state2][state3] = distance[state2][state] + distance[state][state3]
+                    next[state2][state3] = next[state2][state]
+    return FloydWarshallResult(distance, next)
 
 class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
     def __init__(self, matrix: dict[State, list[State]]):
@@ -65,6 +105,9 @@ class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
 
     def cost(self, state: State, action: State) -> float:
         return 1
+
+    def states(self) -> list[State]:
+        return list(self.matrix.keys())
 
 
 if __name__ == "__main__":
@@ -82,3 +125,6 @@ if __name__ == "__main__":
 
     space = AdjacentMatrixSearchSpace(g)
     print(astar_search(space, 1, 9, lambda s, a: 0))
+    fw = floyd_warshall_search(space)
+    print(fw.distance[1][9])
+    print(fw.path(1, 9))
