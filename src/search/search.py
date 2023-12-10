@@ -43,6 +43,22 @@ def astar_search(space: SearchSpace[State, Action], start: State, heuristic: Cal
         for element in next_elements:
             queue.put(element)
 
+def all_distance_bfs_search(space: SearchSpace[State, Action], start: State) -> dict[State, int]:
+    queue = [(0, start)]
+    visited = set()
+    result = {}
+    while queue:
+        cost, state = queue.pop(0)
+        if state in visited:
+            continue
+        visited.add(state)
+        result[state] = cost
+        for action in space.actions(state):
+            new_state = space.result(state, action)
+            new_cost = cost + space.cost(state, action)
+            queue.append((new_cost, new_state))
+    return result
+
 class AdjenctMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
     def __init__(self, matrix: dict[State, list[State]], start: State, goal: State):
         self.matrix = matrix
