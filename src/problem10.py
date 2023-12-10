@@ -3,11 +3,13 @@ import math
 import time
 from dataclasses import dataclass
 from typing import Optional
-from search.search import *
+from util.search import *
 
+from src.util.search import AdjacentMatrixSearchSpace
 from util.resources import resource
 from util.timer import timed
 from parsec import *
+from util.grid import *
 
 input = resource("problem10.txt")
 example = """.....
@@ -15,14 +17,6 @@ example = """.....
 .|.|.
 .L-J.
 ....."""
-
-@dataclass
-class Point:
-    x: int
-    y: int
-
-    def __hash__(self):
-        return hash((self.x, self.y))
 
 # | is a vertical pipe connecting north and south.
 # - is a horizontal pipe connecting east and west.
@@ -80,16 +74,13 @@ def to_graph(s: str) -> tuple[dict[Point, list[Point]], Point]:
 
 def solve(s: str) -> int:
     g, start = to_graph(s)
-    space = AdjenctMatrixSearchSpace(g, start, None)
+    space = AdjacentMatrixSearchSpace(g)
     result = all_distance_bfs_search(space, start)
     return max(result.values())
 
 
 print(solve(example))
 print(solve(input))
-
-def add_point(p: Point, d: Point) -> Point:
-    return Point(p.x + d.x, p.y + d.y)
 
 def assign_glyph(s: str, p: Point, n: str) -> str:
     lines = s.split("\n")
@@ -115,7 +106,7 @@ def dir_cross_counter(graph: dict[Point, list[Point]], loop: set[Point], max_x:i
 
 def solve2(s: str) -> int:
     g, start = to_graph(s)
-    space = AdjenctMatrixSearchSpace(g, start, None)
+    space = AdjacentMatrixSearchSpace(g)
     result = all_distance_bfs_search(space, start)
     # the loop consists of all points which are reachable from start, i.e. all keys of this map
     loop = set(result.keys())

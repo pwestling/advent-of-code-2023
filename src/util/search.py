@@ -6,12 +6,6 @@ Action = TypeVar('Action')
 
 
 class SearchSpace(Protocol[State, Action]):
-    def initial_state(self) -> State:
-        ...
-
-    def is_goal(self, state: State) -> bool:
-        ...
-
     def actions(self, state: State) -> list[Action]:
         ...
 
@@ -21,13 +15,13 @@ class SearchSpace(Protocol[State, Action]):
     def cost(self, state: State, action: Action) -> float:
         ...
 
-def astar_search(space: SearchSpace[State, Action], start: State, heuristic: Callable[[State, Action], float], beam_size: Optional[int] = None) -> list[Action]:
+def astar_search(space: SearchSpace[State, Action], start: State, goal: State, heuristic: Callable[[State, Action], float], beam_size: Optional[int] = None) -> list[Action]:
     queue = PriorityQueue()
     queue.put((0, start, []))
     visited = set()
     while not queue.empty():
         _, state, path = queue.get()
-        if space.is_goal(state):
+        if state == goal:
             return path
         if state in visited:
             continue
@@ -59,17 +53,9 @@ def all_distance_bfs_search(space: SearchSpace[State, Action], start: State) -> 
             queue.append((new_cost, new_state))
     return result
 
-class AdjenctMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
-    def __init__(self, matrix: dict[State, list[State]], start: State, goal: State):
+class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
+    def __init__(self, matrix: dict[State, list[State]]):
         self.matrix = matrix
-        self.start = start
-        self.goal = goal
-
-    def initial_state(self) -> State:
-        return self.start
-
-    def is_goal(self, state: State) -> bool:
-        return state == self.goal
 
     def actions(self, state: State) -> list[State]:
         return self.matrix[state]
@@ -94,5 +80,5 @@ if __name__ == "__main__":
         9: [3]
     }
 
-    space = AdjenctMatrixSearchSpace(g, 1, 9)
-    print(astar_search(space, 1, lambda s, a: 0))
+    space = AdjacentMatrixSearchSpace(g)
+    print(astar_search(space, 1, 9, lambda s, a: 0))
