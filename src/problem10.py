@@ -1,3 +1,4 @@
+import functools
 import math
 import time
 from dataclasses import dataclass
@@ -5,6 +6,7 @@ from typing import Optional
 from search.search import *
 
 from util.resources import resource
+from util.timer import timed
 from parsec import *
 
 input = resource("problem10.txt")
@@ -93,17 +95,23 @@ def assign_glyph(s: str, p: Point, n: str) -> str:
     lines = s.split("\n")
     return "\n".join(lines[:p.x] + [lines[p.x][:p.y] + n + lines[p.x][p.y+1:]] + lines[p.x+1:])
 
-
-def dir_cross_count(graph: dict[Point, list[Point]], loop: set[Point], p: Point, d: Point, side: Point, max_x:int, max_y:int) -> int:
-    count = 0
-    current = add_point(p, d)
-    while 0 <= current.x < max_x and 0 <= current.y < max_y:
-        if current in loop:
-            adj_list = graph[current]
-            if add_point(current, side) in adj_list:
-                count += 1
-        current = add_point(current, d)
-    return count
+def dir_cross_counter(graph: dict[Point, list[Point]], loop: set[Point], max_x:int, max_y:int) -> tuple[Callable[[Point, Point, Point], bool], list[int]]:
+    call_count = [0]
+    @functools.cache
+    def dir_cross_count_recur(p: Point, d: Point, side: Point) -> int:
+        call_count[0] += 1
+        current = add_point(p, d)
+        if 0 <= current.x < max_x and 0 <= current.y < max_y:
+            if current in loop:
+                adj_list = graph[current]
+                if add_point(current, side) in adj_list:
+                    return 1 + dir_cross_count_recur(current, d, side)
+            return dir_cross_count_recur(current, d, side)
+        else:
+            return 0
+    def dir_cross_answer(p: Point, d: Point, side: Point) -> bool:
+        return dir_cross_count_recur(p, d, side) % 2 == 1
+    return dir_cross_answer, call_count
 
 def solve2(s: str) -> int:
     g, start = to_graph(s)
@@ -115,42 +123,30 @@ def solve2(s: str) -> int:
     max_x = len(lines)
     max_y = len(lines[0])
     points_in_loop = set()
+    dir_cross_count_is_odd, call_count = dir_cross_counter(g, loop, max_x, max_y)
+    left = Point(0, -1)
+    right = Point(0, 1)
+    up = Point(-1, 0)
+    down = Point(1, 0)
     for i in range(max_x):
         for j in range(max_y):
             # Walk outwards along each cardinal direction until we either hit the edge or part of the loop
 
-            # north
-            north_loop_left_crosses = dir_cross_count(g, loop, Point(i, j), Point(-1, 0), Point(0, -1), max_x, max_y)
-            north_loop_right_crosses = dir_cross_count(g, loop,  Point(i, j), Point(-1, 0), Point(0, 1), max_x, max_y)
+            point = Point(i, j)
 
-            # south
-            south_loop_left_crosses = dir_cross_count(g, loop,  Point(i, j), Point(1, 0), Point(0, -1), max_x, max_y)
-            south_loop_right_crosses = dir_cross_count(g, loop,  Point(i, j), Point(1, 0), Point(0, 1), max_x, max_y)
+            if dir_cross_count_is_odd(point, up, left, ) and \
+                dir_cross_count_is_odd(point, up, right, ) and \
+                dir_cross_count_is_odd(point, down, left, ) and \
+                dir_cross_count_is_odd(point, down, right, ) and \
+                dir_cross_count_is_odd(point, right, up, ) and \
+                dir_cross_count_is_odd(point, right, down, ) and \
+                dir_cross_count_is_odd(point, left, up, ) and \
+                dir_cross_count_is_odd(point, left, down, ):
 
-            # east
-            east_loop_left_crosses = dir_cross_count(g, loop,  Point(i, j), Point(0, 1), Point(-1, 0), max_x, max_y)
-            east_loop_right_crosses = dir_cross_count(g, loop,  Point(i, j), Point(0, 1), Point(1, 0), max_x, max_y)
-
-            # west
-            west_loop_left_crosses = dir_cross_count(g, loop,  Point(i, j), Point(0, -1), Point(-1, 0), max_x, max_y)
-            west_loop_right_crosses = dir_cross_count(g, loop,  Point(i, j), Point(0, -1), Point(1, 0), max_x, max_y)
-
-            #check if all are odd
-            if north_loop_left_crosses % 2 == 1 and \
-                north_loop_right_crosses % 2 == 1 and \
-                south_loop_left_crosses % 2 == 1 and \
-                south_loop_right_crosses % 2 == 1 and \
-                east_loop_left_crosses % 2 == 1 and \
-                east_loop_right_crosses % 2 == 1 and \
-                west_loop_left_crosses % 2 == 1 and \
-                west_loop_right_crosses % 2 == 1:
-
-                points_in_loop.add(Point(i, j))
+                points_in_loop.add(point)
 
 
-    # change all the loop points to 0 in the picture
     # visualize(loop, max_x, max_y, points_in_loop, s)
-
     return len(points_in_loop)
 
 
@@ -204,7 +200,9 @@ L7JLJL-JLJLJL--JLJ.L"""
 # print(solve2(example3))
 
 print(solve2(example4))
-print(solve2(input))
+
+with timed():
+    print(solve2(input))
 
 
 
