@@ -125,15 +125,7 @@ def solve2(s: str) -> int:
 
             point = Point(i, j)
 
-            if dir_cross_count_is_odd(point, up, left, ) and \
-                dir_cross_count_is_odd(point, up, right, ) and \
-                dir_cross_count_is_odd(point, down, left, ) and \
-                dir_cross_count_is_odd(point, down, right, ) and \
-                dir_cross_count_is_odd(point, right, up, ) and \
-                dir_cross_count_is_odd(point, right, down, ) and \
-                dir_cross_count_is_odd(point, left, up, ) and \
-                dir_cross_count_is_odd(point, left, down, ):
-
+            if dir_cross_count_is_odd(point, up, left, ) and not point in loop:
                 points_in_loop.add(point)
 
 
