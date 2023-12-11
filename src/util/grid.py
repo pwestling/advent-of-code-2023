@@ -80,6 +80,27 @@ class Grid(Generic[T]):
                 if predicate(self.grid[i][j]):
                     yield Point(i, j)
 
+    def as_adjacency_list(self, is_valid: Optional[Callable[[Point], bool]] = None) -> dict[Point, list[Point]]:
+        if is_valid is None:
+            is_valid = lambda p: True
+        result = {}
+        for p in self.points():
+            if is_valid(p):
+                result[p] = []
+                for d in [UP, DOWN, LEFT, RIGHT]:
+                    if is_valid(p + d) and self.is_inside(p + d):
+                        result[p].append(p + d)
+        return result
+
+    def __str__(self):
+        return "\n".join("".join(str(x) for x in row) for row in self.grid)
+
+    def get_row(self, i: int) -> list[T]:
+        return self.grid[i]
+
+    def get_col(self, j: int) -> list[T]:
+        return [row[j] for row in self.grid]
+
 K = TypeVar("K")
 def flood_fill(g: Grid[K], start: Point, is_valid: Optional[Callable[[Point], bool]] = None) -> Grid[bool]:
     if is_valid is None:

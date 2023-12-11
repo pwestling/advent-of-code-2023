@@ -57,6 +57,21 @@ def all_distance_bfs_search(space: SearchSpace[State, Action], start: State) -> 
             new_cost = cost + space.cost(state, action)
             queue.append((new_cost, new_state))
     return result
+
+def bfs_search(space: SearchSpace[State, Action], start: State, goal: State) -> list[Action]:
+    queue = [(start, [])]
+    visited = set()
+    while queue:
+        state, path = queue.pop(0)
+        if state == goal:
+            return path
+        if state in visited:
+            continue
+        visited.add(state)
+        for action in space.actions(state):
+            new_state = space.result(state, action)
+            new_path = path + [action]
+            queue.append((new_state, new_path))
 @dataclass
 class FloydWarshallResult:
     distance: dict[State, dict[State, float]]

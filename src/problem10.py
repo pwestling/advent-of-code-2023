@@ -79,8 +79,8 @@ def solve(s: str) -> int:
     return max(result.values())
 
 
-print(solve(example))
-print(solve(input))
+# print(solve(example))
+# print(solve(input))
 
 def assign_glyph(s: str, p: Point, n: str) -> str:
     lines = s.split("\n")
@@ -105,7 +105,8 @@ def dir_cross_counter(graph: dict[Point, list[Point]], loop: set[Point], max_x:i
     return dir_cross_answer, call_count
 
 def solve2(s: str) -> int:
-    g, start = to_graph(s)
+    s = s.strip()
+    g, start = to_graph(s.strip())
     space = AdjacentMatrixSearchSpace(g)
     result = all_distance_bfs_search(space, start)
     # the loop consists of all points which are reachable from start, i.e. all keys of this map
@@ -129,7 +130,7 @@ def solve2(s: str) -> int:
                 points_in_loop.add(point)
 
 
-    # visualize(loop, max_x, max_y, points_in_loop, s)
+    visualize(loop, max_x, max_y, points_in_loop, s)
     return len(points_in_loop)
 
 
@@ -139,11 +140,12 @@ def visualize(loop, max_x, max_y, points_in_loop, s):
         for y in range(max_y):
             p = Point(x, y)
             if p in loop:
-                viz = assign_glyph(viz, p, "L")
-            elif Point(x, y) in points_in_loop:
+                # viz = assign_glyph(viz, p, "X")
+                pass
+            elif p in points_in_loop:
                 viz = assign_glyph(viz, p, "I")
             else:
-                viz = assign_glyph(viz, p, "0")
+                viz = assign_glyph(viz, p, " ")
     print(viz)
 
 
@@ -182,10 +184,21 @@ L7JLJL-JLJLJL--JLJ.L"""
 # print(solve2(example2))
 # print(solve2(example3))
 
-print(solve2(example4))
+# print(solve2(example4))
 
-with timed():
-    print(solve2(input))
+# with timed():
+#     print(solve2(input))
+
+example5 = """
+.         F7...
+        S-JL-7.
+       FJ  . L7
+       L7    FJ
+        L-7F-J.
+          LJ...
+"""
+
+print(solve2(example5))
 
 
 
