@@ -24,7 +24,7 @@ example = """...#......
 #...#....."""
 
 
-def solve(s: str) -> int:
+def solve(s: str, abs=abs) -> int:
     grid = Grid(s.split("\n"))
     empty_rows = set()
     empty_cols = set()
@@ -37,32 +37,31 @@ def solve(s: str) -> int:
             if all(grid.get(Point(i,j)) == "." for i in range(grid.max_x)):
                 empty_cols.add(j)
         expanded_grid = grid
-        galaxy_points = list()
-        for p in expanded_grid.points():
-            if expanded_grid[p] == "#":
-                galaxy_points.append(p)
+
+    with timed("Gal points"):
+        galaxy_points = expanded_grid.points_where(lambda x: x == "#")
 
     with timed("Dist find"):
         sum = 0
         mult = 1000000
-        for i, p1 in enumerate(galaxy_points):
-            for j, p2 in enumerate(galaxy_points):
-                if i < j:
-                    cartesian_distance = abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
-                    # add one for every empty row or col we crossed
-                    for x in empty_rows:
-                        if p1.x < x < p2.x or p2.x < x < p1.x:
-                            cartesian_distance += (mult - 1)
-                    for y in empty_cols:
-                        if p1.y < y < p2.y or p2.y < y < p1.y:
-                            cartesian_distance += (mult - 1)
-
+        with timed("Expand"):
+            for p in galaxy_points:
+                for x in empty_rows:
+                    if p.x > x:
+                        p.x += (mult - 1)
+                for y in empty_cols:
+                    if p.y > y:
+                        p.y += (mult - 1)
+        with timed("Add"):
+            for i, p1 in enumerate(galaxy_points):
+                for j, p2 in enumerate(galaxy_points[i+1:]):
+                    cartesian_distance = (p2.x - p1.x) + abs(p1.y - p2.y)
                     sum += cartesian_distance
     return sum
 
 
-# print(solve(example))
+print(solve(example))
 with timed():
     print(solve(input))
 

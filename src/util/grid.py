@@ -74,11 +74,13 @@ class Grid(Generic[T]):
             for j in range(self.max_y):
                 yield Point(i, j)
 
-    def points_where(self, predicate: Callable[[T], bool]) -> Iterable[Point]:
+    def points_where(self, predicate: Callable[[T], bool]) -> list[Point]:
+        result = []
         for i in range(self.max_x):
             for j in range(self.max_y):
                 if predicate(self.grid[i][j]):
-                    yield Point(i, j)
+                    result.append(Point(i, j))
+        return result
 
     def as_adjacency_list(self, is_valid: Optional[Callable[[Point], bool]] = None) -> dict[Point, list[Point]]:
         if is_valid is None:
