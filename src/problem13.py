@@ -64,7 +64,7 @@ def solve_one(s: str) -> int:
 
 def solve(s: str) -> int:
     # split the input by empty rows
-    rows = s.split("\n\n")
+    rows = s.strip().split("\n\n")
     return sum(solve_one(row) for row in rows)
 
 # print(solve_one(example.split("\n\n")[1]))
@@ -153,6 +153,39 @@ if solve2(example) != 400:
     exit(1)
 
 
+def do_check3(g: np.ndarray, required_diffs: int) -> int:
+    for i in range(1, len(g)):
+        front = g[:i]
+        back = g[i:]
+        shorter = min(len(front), len(back))
+        front = np.flip(front, axis=0)
+        front = front[:shorter]
+        back = back[:shorter]
+        diff: np.ndarray = cast(np.ndarray, front != back)
+        nonzero = diff.nonzero()
+        if len(nonzero[0]) == required_diffs:
+            return i
+    return -1
+
+def solve_one_3(s: str, required_diffs: int) -> int:
+    grid = to_numpy(s)
+    horizontal = do_check3(grid, required_diffs)
+    vertical = do_check3(grid.transpose(), required_diffs)
+    if horizontal > 0:
+        return horizontal * 100
+    if vertical > 0:
+        return vertical
+    print(s)
+    raise Exception("No solution")
+
+def solve3(s: str, required_diffs: int) -> int:
+    # split the input by empty rows
+    rows = s.strip().split("\n\n")
+    results = [solve_one_3(row, required_diffs) for row in rows]
+    return sum(results)
+
+
+
 example2 = """
 #..#
 .##.
@@ -173,22 +206,39 @@ example3 = """#.#.##..#..
 .#.######..
 .#.######.."""
 
-print("Doing example 3")
-print(solve2(example3))
+# print("Doing example 3")
+# print(solve2(example3))
 
 example4 = """
-.##...###
-#..#.#..#
-...#.#..#
-##.##....
-######..#
-######..#
-##.##...."""
+.##.###..####..
+....#..#.####.#
+.##.###...##...
+.##..###..##..#
+.##..##..#..#..
+####.#####..###
+####.##..####..
+#..###..#.##.#.
+#..#....##..##.
+...#.#.###..###
+......#.#.##.#.
+.....##...##...
+#####...##..##."""
 
-print("Doing example 4")
-print(solve2(example4))
+# print("Doing example 4")
+# print(solve2(example4))
 
-print(solve2(input))
+# print(solve2(input))
 # incorrect: 33253 26058 26162 33432 33438
 
+print(solve(example4))
 
+with timed():
+    print(solve(input))
+with timed():
+    print(solve3(input, 0))
+
+
+with timed():
+    print(solve2(input))
+with timed():
+    print(solve3(input, 1))

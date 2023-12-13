@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from typing import TypeVar, Generic, Iterable, Optional, Callable
+from typing import TypeVar, Generic, Iterable, Optional, Callable, cast
 
+import numpy
+import numpy as np
 
 @dataclass
 class Point:
@@ -116,3 +118,36 @@ def flood_fill(g: Grid[K], start: Point, is_valid: Optional[Callable[[Point], bo
             for d in [UP, DOWN, LEFT, RIGHT]:
                 queue.append(p + d)
     return visited
+
+
+def to_numpy(s: str) -> np.ndarray:
+    return np.array([[c for c in row] for row in s.strip().split("\n")])
+
+if __name__ == "__main__":
+    g = to_numpy("""
+#...
+.#..
+.#..
+#...
+    """)
+
+    g = to_numpy("""
+#..#
+.#..
+....
+....
+        """)
+    g = g.transpose()
+    print(g)
+    for i in range(1, len(g)):
+        front = g[:i]
+        back = g[i:]
+        shorter = min(len(front), len(back))
+        front = front[:shorter]
+        back = back[:shorter]
+        front = np.flip(front, axis=0)
+        diff: np.ndarray = cast(np.ndarray, front != back)
+        nonzero = diff.nonzero()
+        if len(nonzero[0]) == 1:
+            print(i, front, back)
+            break
