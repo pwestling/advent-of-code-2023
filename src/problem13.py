@@ -101,6 +101,8 @@ def do_check_two(nums: list[int]) -> int:
     elif len(solutions) > 1:
         print("Multiple solutions", solutions)
         # print(nums)
+        # This is a hack because this issue affected exactly one of my inputs
+        # correct thing to do would be to include the rows and verify which solution actually differs by 1 character
         return max(solutions)
     return -1
 
