@@ -174,14 +174,15 @@ def solve2(s: str) -> int:
     for row in rows:
         # print(row)
         progress += 1
-        print(f"{progress}/{total}")
+        # print(f"{progress}/{total}")
         valid_rows = valid_permutations_for_row_grog(row,0, 0, 0)
         cache.clear()
         sum += valid_rows
     return sum
 
 print(solve2(example))
-# print(solve2(input))
+with timed():
+    print(solve2(input))
 
 # 23432027 is too low
 # 83317216247365
