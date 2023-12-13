@@ -86,7 +86,7 @@ def do_check_two(nums: list[int]) -> int:
         diffs = []
         # print("fb", i, front, back)
         for k in range(len(front)):
-            diff = abs(front[k] - back[k])
+            diff = front[k] ^ back[k]
             if diff != 0:
                 diffs.append(diff)
         if len(diffs) == 1:
@@ -100,10 +100,7 @@ def do_check_two(nums: list[int]) -> int:
         return solutions[0]
     elif len(solutions) > 1:
         print("Multiple solutions", solutions)
-        # print(nums)
-        # This is a hack because this issue affected exactly one of my inputs
-        # correct thing to do would be to include the rows and verify which solution actually differs by 1 character
-        return max(solutions)
+        raise Exception("Multi solution")
     return -1
 
 def solve_single_two(s: str) -> int:
