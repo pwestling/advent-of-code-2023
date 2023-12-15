@@ -121,7 +121,7 @@ def flood_fill(g: Grid[K], start: Point, is_valid: Optional[Callable[[Point], bo
 
 
 def to_numpy(s: str) -> np.ndarray:
-    return np.array([[c for c in row] for row in s.strip().split("\n")])
+    return np.array([[c for c in row] for row in s.split("\n") if row.strip()])
 
 if __name__ == "__main__":
     g = to_numpy("""
