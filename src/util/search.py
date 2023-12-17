@@ -3,6 +3,8 @@ from typing import TypeVar, Protocol, Generic, Callable, Optional
 from queue import PriorityQueue
 import math
 
+from tqdm import tqdm
+
 State = TypeVar('State')
 Action = TypeVar('Action')
 
@@ -20,22 +22,32 @@ class SearchSpace(Protocol[State, Action]):
     def states(self) -> list[State]:
         ...
 
-def astar_search(space: SearchSpace[State, Action], start: State, goal: State, heuristic: Callable[[State, Action], float], beam_size: Optional[int] = None) -> list[Action]:
+def astar_search(space: SearchSpace[State, Action], start: State, is_goal: Callable[[State], bool], heuristic: Callable[[State, Action], float], beam_size: Optional[int] = None, expected_max: float = None) -> tuple[float, list[Action]]:
     queue = PriorityQueue()
     queue.put((0, start, []))
-    visited = set()
+    best_scores = {}
+    highest_cost = 0
     while not queue.empty():
-        _, state, path = queue.get()
-        if state == goal:
-            return path
-        if state in visited:
-            continue
-        visited.add(state)
+        this_cost, state, path = queue.get()
+        if this_cost > highest_cost:
+            highest_cost = this_cost
+        # print(this_cost, state, path)
+        if is_goal(state):
+            return this_cost, path
+        # if state in visited:
+        #     continue
+        # visited.add(state)
         next_elements = []
         for action in space.actions(state):
             new_state = space.result(state, action)
             new_path = path + [action]
-            next_elements.append((space.cost(state, action) + heuristic(new_state, action), new_state, new_path))
+            cost = space.cost(state, action)
+            # if new_state in best_scores:
+            #     print("found", new_state, best_scores[new_state], cost)
+            if best_scores.get(new_state, math.inf) > cost:
+                # print(len(best_scores))
+                best_scores[new_state] = cost
+                next_elements.append((cost + heuristic(new_state, action), new_state, new_path))
         if beam_size is not None:
             next_elements.sort(key=lambda x: x[0])
             next_elements = next_elements[:beam_size]
@@ -125,21 +137,21 @@ class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
         return list(self.matrix.keys())
 
 
-if __name__ == "__main__":
-    g = {
-        1: [2, 3],
-        2: [1, 4],
-        3: [1, 4],
-        4: [2, 3, 5],
-        5: [4, 6],
-        6: [7],
-        7: [6, 8, 9],
-        8: [1],
-        9: [3]
-    }
-
-    space = AdjacentMatrixSearchSpace(g)
-    print(astar_search(space, 1, 9, lambda s, a: 0))
-    fw = floyd_warshall_search(space)
-    print(fw.distance[1][9])
-    print(fw.path(1, 9))
+# if __name__ == "__main__":
+#     g = {
+#         1: [2, 3],
+#         2: [1, 4],
+#         3: [1, 4],
+#         4: [2, 3, 5],
+#         5: [4, 6],
+#         6: [7],
+#         7: [6, 8, 9],
+#         8: [1],
+#         9: [3]
+#     }
+#
+#     space = AdjacentMatrixSearchSpace(g)
+#     print(astar_search(space, 1, 9, lambda s, a: 0))
+#     fw = floyd_warshall_search(space)
+#     print(fw.distance[1][9])
+#     print(fw.path(1, 9))

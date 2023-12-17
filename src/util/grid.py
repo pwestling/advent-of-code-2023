@@ -3,6 +3,8 @@ from typing import TypeVar, Generic, Iterable, Optional, Callable, cast
 
 import numpy
 import numpy as np
+import sys
+sys.setrecursionlimit(6000)
 
 @dataclass
 class Point:
@@ -30,12 +32,39 @@ class Point:
     def step_right(self):
         return self + RIGHT
 
+    def turn_left(self):
+        if self == UP:
+            return LEFT
+        elif self == DOWN:
+            return RIGHT
+        elif self == LEFT:
+            return DOWN
+        elif self == RIGHT:
+            return UP
+
+    def turn_right(self):
+        return self.turn_left().turn_left().turn_left()
+
+    def __repr__(self):
+        if self == UP:
+            return "UP"
+        elif self == DOWN:
+            return "DOWN"
+        elif self == LEFT:
+            return "LEFT"
+        elif self == RIGHT:
+            return "RIGHT"
+        return f"Point({self.x}, {self.y})"
+
+    def __lt__(self, other):
+        return (self.x, self.y) < (other.x, other.y)
 
 
 UP = Point(-1, 0)
 DOWN = Point(1, 0)
 LEFT = Point(0, -1)
 RIGHT = Point(0, 1)
+
 def add_point(p: Point, d: Point) -> Point:
     return Point(p.x + d.x, p.y + d.y)
 
@@ -123,31 +152,5 @@ def flood_fill(g: Grid[K], start: Point, is_valid: Optional[Callable[[Point], bo
 def to_numpy(s: str) -> np.ndarray:
     return np.array([[c for c in row] for row in s.split("\n") if row.strip()])
 
-if __name__ == "__main__":
-    g = to_numpy("""
-#...
-.#..
-.#..
-#...
-    """)
-
-    g = to_numpy("""
-#..#
-.#..
-....
-....
-        """)
-    g = g.transpose()
-    print(g)
-    for i in range(1, len(g)):
-        front = g[:i]
-        back = g[i:]
-        shorter = min(len(front), len(back))
-        front = front[:shorter]
-        back = back[:shorter]
-        front = np.flip(front, axis=0)
-        diff: np.ndarray = cast(np.ndarray, front != back)
-        nonzero = diff.nonzero()
-        if len(nonzero[0]) == 1:
-            print(i, front, back)
-            break
+def is_inside(grid: np.ndarray, p: Point) -> bool:
+    return 0 <= p.x < grid.shape[0] and 0 <= p.y < grid.shape[1]
