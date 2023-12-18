@@ -109,10 +109,12 @@ class NumGridSearchSpace(SearchSpace[SearchState, Point]):
         self.heuristic = heuristic
 
     def actions(self, state: SearchState) -> list[Point]:
-        possible_directions = [state.direction.turn_right(), state.direction.turn_left()]
-        if state.path_length < 3:
-            possible_directions = [state.direction] + possible_directions
-
+        if state.path_length < 4:
+            possible_directions = [state.direction]
+        elif state.path_length == 10:
+            possible_directions = [state.direction.turn_right(), state.direction.turn_left()]
+        else:
+            possible_directions = [state.direction, state.direction.turn_right(), state.direction.turn_left()]
         return [p for p in possible_directions if is_inside(self.grid, state.position + p)]
 
     def result(self, state: SearchState, action: Point) -> SearchState:
@@ -164,7 +166,7 @@ def solve(s: str) -> int:
     end_state = SearchState(end, LEFT, 1, 0)
     end_cost = intgrid[end.x, end.y]
     def is_end(state: SearchState) -> bool:
-        return state.position == end
+        return state.position == end and state.path_length >= 4
 
     def heuristic_stupid(state: SearchState, direction: Point) -> float:
         return 0
@@ -196,7 +198,7 @@ def solve(s: str) -> int:
 
 with timed():
     x = solve(example)
-    if x != 102:
+    if x != 94:
         raise Exception("wrong answer on example")
 
 with timed():
