@@ -120,6 +120,20 @@ def floyd_warshall_search(space: SearchSpace[State, Action]) -> FloydWarshallRes
                     next[state2][state3] = next[state2][state]
     return FloydWarshallResult(distance, next)
 
+def find_all_paths(space: SearchSpace[State, Action], start: State, goal: State) -> list[list[Action]]:
+    result = []
+    queue = [(start, [])]
+    while queue:
+        state, path = queue.pop(0)
+        if state == goal:
+            result.append(path)
+        for action in space.actions(state):
+            new_state = space.result(state, action)
+            new_path = path + [action]
+            queue.append((new_state, new_path))
+    return result
+
+
 class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
     def __init__(self, matrix: dict[State, list[State]]):
         self.matrix = matrix

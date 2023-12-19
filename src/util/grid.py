@@ -59,6 +59,8 @@ class Point:
     def __lt__(self, other):
         return (self.x, self.y) < (other.x, other.y)
 
+def mult_point(p: Point, n: int) -> Point:
+    return Point(p.x * n, p.y * n)
 
 UP = Point(-1, 0)
 DOWN = Point(1, 0)
