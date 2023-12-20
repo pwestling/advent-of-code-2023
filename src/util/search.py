@@ -124,6 +124,7 @@ def find_all_paths(space: SearchSpace[State, Action], start: State, goal: State)
     result = []
     queue = [(start, [])]
     while queue:
+        print(len(queue))
         state, path = queue.pop(0)
         if state == goal:
             result.append(path)
