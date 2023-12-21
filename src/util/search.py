@@ -1,3 +1,4 @@
+import itertools
 from dataclasses import dataclass
 from typing import TypeVar, Protocol, Generic, Callable, Optional
 from queue import PriorityQueue
@@ -134,6 +135,19 @@ def find_all_paths(space: SearchSpace[State, Action], start: State, goal: State)
             queue.append((new_state, new_path))
     return result
 
+
+def topo_sort(space: SearchSpace[State, Action], start: State) -> list[list[State]]:
+    visited = set()
+    result = []
+    def visit(state: State, depth: int):
+        if state in visited:
+            return
+        visited.add(state)
+        for action in space.actions(state):
+            visit(space.result(state, action), depth + 1)
+        result.append((state, depth))
+    visit(start, 0)
+    return [list(t[1]) for t in itertools.groupby(sorted(result, key=lambda x: x[1]), lambda x: x[1])]
 
 class AdjacentMatrixSearchSpace(Generic[State], SearchSpace[State, State]):
     def __init__(self, matrix: dict[State, list[State]]):
