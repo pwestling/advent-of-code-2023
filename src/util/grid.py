@@ -156,3 +156,6 @@ def to_numpy(s: str) -> np.ndarray:
 
 def is_inside(grid: np.ndarray, p: Point) -> bool:
     return 0 <= p.x < grid.shape[0] and 0 <= p.y < grid.shape[1]
+
+def to_string(grid: np.ndarray) -> str:
+    return "\n".join("".join(row) for row in grid)
